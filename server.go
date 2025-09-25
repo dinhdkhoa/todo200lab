@@ -2,62 +2,18 @@ package main
 
 import (
 	"log"
+	"mymodule/common"
 	"net/http"
 	"os"
-	"time"
+
+	itemmodel "mymodule/module/item/model"
+	httptransport "mymodule/module/item/transport/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
-
-type TodoItem struct {
-	Id          uuid.UUID     `json:"id" gorm:"column:id"`
-	Title       string     `json:"title" gorm:"column:title"`
-	Description string     `json:"description" gorm:"column:description"`
-	Status      string     `json:"status" gorm:"column:status"`
-	CreatedAt   *time.Time `json:"created_at" gorm:"column:created_at"`
-	UpdatedAt   *time.Time `json:"updated_at,omitempty" gorm:"column:updated_at"`
-}
-
-func (TodoItem) TableName() string { return "\"200lab\".todo_items" }
-
-type TodoItemCreation struct {
-	Id          int    `json:"id" gorm:"column:id"`
-	Title       string `json:"title" gorm:"column:title"`
-	Description string `json:"description" gorm:"column:description"`
-}
-
-func (TodoItemCreation) TableName() string { return TodoItem{}.TableName() }
-
-type TodoItemUpdate struct {
-	Title       *string `json:"title" gorm:"column:title"`
-	Description *string `json:"description" gorm:"column:description"`
-	Status      *string `json:"status" gorm:"column:status"`
-}
-
-func (TodoItemUpdate) TableName() string { return TodoItem{}.TableName() }
-
-type Paging struct {
-	Page    int    `json:"page" form:"page"`
-	Limit   int    `json:"limit" form:"limit"`
-	Total   int64  `json:"total" form:"-"`
-	Keyword string `json:"-" form:"-"`
-}
-
-func (p *Paging) Process() {
-	if p.Page <= 1 {
-		p.Page = 1
-	}
-	if p.Limit <= 1 {
-		p.Limit = 1
-	}
-	if p.Limit >= 100 {
-		p.Limit = 100
-	}
-}
 
 func main() {
 	err := godotenv.Load()
@@ -93,8 +49,9 @@ func main() {
 	{
 		items := v1.Group("/items")
 		{
-			items.GET("/", ListItems(db))
-			items.GET("/:id")
+			items.GET("", ListItems(db))
+			items.POST("", httptransport.CreateNewItem(db))
+			// items.GET("/:id")
 		}
 
 	}
@@ -110,15 +67,15 @@ func main() {
 func ListItems(db *gorm.DB) func(c *gin.Context) {
 	return func(c *gin.Context) {
 
-		var paging Paging
+		var paging common.Paging
 		if err := c.ShouldBind(&paging); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 		paging.Process()
 
-		var res []TodoItem
-		db = db.Table(TodoItem{}.TableName()).Where("status <> (?)", "Deleted")
+		var res []itemmodel.TodoItem
+		db = db.Table(itemmodel.TodoItem{}.TableName()).Where("status <> (?)", "Deleted")
 
 		if err := db.Select("id").Count(&paging.Total).Error; err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -130,6 +87,6 @@ func ListItems(db *gorm.DB) func(c *gin.Context) {
 			return
 		}
 
-		c.JSON(http.StatusOK, gin.H{"data": res, "paging": paging})
+		c.JSON(http.StatusOK, common.NewSuccessPagingRes(res, paging, nil))
 	}
 }

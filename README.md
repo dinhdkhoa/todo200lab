@@ -6,3 +6,11 @@ It serves version information on /version and answers any other request like /na
 git config --local user.name 'dinhdkhoa'
 git config --local user.email 'kevin_mccain1718@yahoo.com'
 ```
+``` 
+// dev.nix
+{ pkgs, ... }: {
+  packages = [
+    pkgs.go
+  ];
+}
+```
