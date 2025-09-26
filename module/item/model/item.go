@@ -10,6 +10,7 @@ import (
 
 var (
 	ErrorTitleRequired = errors.New("title is required")
+	ErrorItemIsDeleted = errors.New("item is deleted")
 )
 
 type TodoItem struct {

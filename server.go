@@ -52,6 +52,7 @@ func main() {
 			items.GET("", ListItems(db))
 			items.POST("", httptransport.CreateNewItem(db))
 			items.GET("/:id", httptransport.GetItemById(db))
+			items.PATCH("/:id", httptransport.UpdateItem(db))
 		}
 
 	}
