@@ -53,6 +53,7 @@ func main() {
 			items.POST("", httptransport.CreateNewItem(db))
 			items.GET("/:id", httptransport.GetItemById(db))
 			items.PATCH("/:id", httptransport.UpdateItem(db))
+			items.DELETE("/:id", httptransport.DeleteItem(db))
 		}
 
 	}
