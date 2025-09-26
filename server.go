@@ -41,7 +41,7 @@ func main() {
 	}
 	defer sqlDB.Close()
 
-	log.Println("Successfully connected to the database!", db)
+	log.Println("Successfully connected to the database!")
 
 	router := gin.Default()
 
@@ -51,7 +51,7 @@ func main() {
 		{
 			items.GET("", ListItems(db))
 			items.POST("", httptransport.CreateNewItem(db))
-			// items.GET("/:id")
+			items.GET("/:id", httptransport.GetItemById(db))
 		}
 
 	}
